@@ -1,4 +1,3 @@
-import 'dart:io';
 
 // loadModelFiles() async {
 //   String? res = await Tflite.loadModel(

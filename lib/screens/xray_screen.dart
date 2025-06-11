@@ -8,7 +8,6 @@ import 'package:save_knee_23/widgets/bottom_sheet.dart';
 
 import '../constants.dart';
 import '../core/utils/local_tflite_service.dart';
-import '../services/xray_classifier.dart';
 import '../widgets/custom_appbar.dart';
 import 'xray_result_screen.dart';
 
