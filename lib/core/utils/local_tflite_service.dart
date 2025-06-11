@@ -12,28 +12,33 @@ class KneeOAClassifier {
   }
 
   Future<String> predict(Uint8List imageBytes) async {
-    // Decode and resize image
     final rawImage = img.decodeImage(imageBytes);
     if (rawImage == null) throw Exception('Failed to decode image');
 
-    final resizedImage =
-        img.copyResize(rawImage, width: inputSize, height: inputSize);
-
-    // Preprocess image to float32 input
+    final resizedImage = img.copyResize(rawImage, width: inputSize, height: inputSize);
     final input = _imageToNormalizedFloat32(resizedImage);
 
-    // Prepare output buffer (e.g. 1x5 output tensor for 5-class classification)
-    final output = List.filled(5, 0.0).reshape([1, 5]);
+    final outputShape = _interpreter.getOutputTensor(0).shape;
+    final output = List.filled(
+      outputShape.reduce((a, b) => a * b),
+      0.0,
+    ).reshape(outputShape);
 
-    // Run inference
     _interpreter.run(input, output);
 
-    // Get predicted class index
-    final scores = output[0];
-    final predictedIndex =
-        scores.indexWhere((e) => e == scores.reduce((a, b) => a > b ? a : b));
+    final scores = (output[0] as List).cast<double>();
+    final predictedIndex = scores.indexWhere(
+          (e) => e == scores.reduce((a, b) => a > b ? a : b),
+    );
 
-    return predictedIndex.toString();
+    final labels = [
+      "Normal (KL 0)",
+      "Doubtful (KL 1)",
+      "Mild (KL 2)",
+      "Moderate (KL 3)",
+      "Severe (KL 4)",
+    ];
+    return labels[predictedIndex];
   }
 
   /// Convert image to [1, height, width, 3] float32 normalized format

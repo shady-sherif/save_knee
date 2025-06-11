@@ -1,4 +1,4 @@
-import  'package:firebase_core/firebase_core.dart';
+import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
@@ -30,12 +30,14 @@ class MyApp extends StatelessWidget {
     return MultiBlocProvider(
       providers: [
         BlocProvider(
+          lazy: true,
           create: (_) => HomeCubit(),
         ),
         BlocProvider(
           create: (_) => AuthCubit(),
         ),
         BlocProvider(
+          lazy: true,
           create: (_) => ChatCubit(),
         )
       ],
@@ -52,6 +54,7 @@ class MyApp extends StatelessWidget {
             ),
           );
         },
+        child: SizedBox.shrink(),
       ),
     );
   }

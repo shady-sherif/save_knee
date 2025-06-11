@@ -18,8 +18,10 @@ class _SplashViewBodyState extends State<SplashViewBody>
   @override
   void initState() {
     super.initState();
-    initSlidingAnimation();
-    navigatingToHomeView();
+    // WidgetsBinding.instance.addPostFrameCallback((_) {
+      initSlidingAnimation();
+      navigatingToHomeView();
+    // });
   }
 
   @override
@@ -28,9 +30,7 @@ class _SplashViewBodyState extends State<SplashViewBody>
       body: Column(
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
-          const Spacer(
-            flex: 1,
-          ),
+          const Spacer(flex: 1),
           const Text(
             'Save Your Knee',
             style: TextStyle(
@@ -80,11 +80,12 @@ class _SplashViewBodyState extends State<SplashViewBody>
   }
 
   void navigatingToHomeView() {
-    Future.delayed(
-      const Duration(seconds: 2),
-      () {
+    Future(() async {
+      await Future.delayed(const Duration(seconds: 2));
+      if (!mounted) return;
+      if (context.mounted) {
         GoRouter.of(context).push(AppRouter.kLoginView);
-      },
-    );
+      }
+    });
   }
 }

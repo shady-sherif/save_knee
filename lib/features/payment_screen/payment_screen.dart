@@ -40,7 +40,8 @@ class _AppointmentScreenState extends State<AppointmentScreen> {
                 value: _selectedType,
                 hint: const Text('Choose Appointment Type'),
                 isExpanded: true,
-                underline: const SizedBox(), // Remove default underline
+                underline: const SizedBox(),
+                // Remove default underline
                 icon: const Icon(Icons.arrow_drop_down, color: kPrimaryColor),
                 items: AppointmentType.values.map((AppointmentType type) {
                   return DropdownMenuItem<AppointmentType>(
@@ -54,7 +55,7 @@ class _AppointmentScreenState extends State<AppointmentScreen> {
                     ),
                   );
                 }).toList(),
-                onChanged: ( newValue) {
+                onChanged: (newValue) {
                   setState(() {
                     _selectedType = newValue;
                     _buttonText = newValue != null
@@ -70,10 +71,11 @@ class _AppointmentScreenState extends State<AppointmentScreen> {
               child: ElevatedButton(
                 onPressed: _selectedType == null
                     ? null // Disable button if no selection
-                    : () async{
+                    : () async {
                         // Add action for button (e.g., navigate or process)
                         ScaffoldMessenger.of(context).showSnackBar(
-                          SnackBar(content: Text('Booking $_selectedType')),
+                          SnackBar(
+                              content: Text('Booking ${_selectedType?.name}')),
                         );
                         await _pay();
                       },
@@ -102,7 +104,9 @@ class _AppointmentScreenState extends State<AppointmentScreen> {
   }
 
   Future<void> _pay() async {
-    PaymobManager().getPaymentKey(_selectedType!.price, "EGP").then((String paymentKey) {
+    PaymobManager()
+        .getPaymentKey(_selectedType!.price, "EGP")
+        .then((String paymentKey) {
       launchUrl(
         Uri.parse(
             "https://accept.paymob.com/api/acceptance/iframes/929874?payment_token=$paymentKey"),
@@ -112,7 +116,7 @@ class _AppointmentScreenState extends State<AppointmentScreen> {
 }
 
 enum AppointmentType {
-  consultation(price: 50, name:'Consultation' ),
+  consultation(price: 50, name: 'Consultation'),
   followUp(price: 30, name: 'Follow-up'),
   therapySession(price: 75, name: 'Therapy Session'),
   checkUp(price: 40, name: 'Check-up');
@@ -121,5 +125,4 @@ enum AppointmentType {
   final String name;
 
   const AppointmentType({required this.price, required this.name});
-
 }

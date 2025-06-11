@@ -7,6 +7,8 @@ import 'package:save_knee_23/screens/xray_result_screen.dart';
 import 'package:save_knee_23/widgets/bottom_sheet.dart';
 import 'package:save_knee_23/widgets/custom_appbar.dart';
 
+import '../../../../core/utils/local_tflite_service.dart';
+
 class XRayScreenT extends StatefulWidget {
   const XRayScreenT({super.key});
 
@@ -19,25 +21,31 @@ class _XRayScreenTState extends State<XRayScreenT> {
   ImagePicker imagePicker = ImagePicker();
   late String result;
   String? label;
+  late KneeOAClassifier classifier;
+  String predictionResult = "Loading...";
 
   _imgFromGallery() async {
     XFile? pickedFile =
-    await imagePicker.pickImage(source: ImageSource.gallery);
+        await imagePicker.pickImage(source: ImageSource.gallery);
     if (pickedFile != null) {
       image = File(pickedFile.path);
       String fileName = _extractFileName(pickedFile.path);
       print("Picked file name: $fileName");
+      result = (await classifier.predict(image!.readAsBytesSync()));
+      setState(() {
+        image;
+      });
 
       // Classify the image based on the pattern in the file name
-      if (fileName == '9003316L.png' || fileName == '9003175R.png') {
-        result = 'Normal';
-      } else if (fileName == '1000398015.jpg' || fileName == '1000417408.png') {
-        result = 'Moderate';
-      } else if (fileName == '1000398017.jpg' || fileName == '1000398023.jpg') {
-        result = 'Severe';
-      } else {
-        result = 'Fady';
-      }
+      // if (fileName == '9003316L.png' || fileName == '9003175R.png') {
+      //   result = 'Normal';
+      // } else if (fileName == '1000398015.jpg' || fileName == '1000417408.png') {
+      //   result = 'Moderate';
+      // } else if (fileName == '1000398017.jpg' || fileName == '1000398023.jpg') {
+      //   result = 'Severe';
+      // } else {
+      //   result = 'Fady';
+      // }
 
       print("Result: $result");
       setState(() {});
@@ -70,6 +78,13 @@ class _XRayScreenTState extends State<XRayScreenT> {
   }
 
   @override
+  void initState() {
+    super.initState();
+    classifier = KneeOAClassifier();
+    WidgetsBinding.instance.addPostFrameCallback((_) => classifier.loadModel());
+  }
+
+  @override
   Widget build(BuildContext context) {
     return SafeArea(
       child: Scaffold(
@@ -96,24 +111,24 @@ class _XRayScreenTState extends State<XRayScreenT> {
               const Spacer(flex: 3),
               image == null
                   ? CircleAvatar(
-                  radius: 100.r,
-                  backgroundColor: kHomeScreenColor,
-                  child: CircleAvatar(
-                    radius: 95.r,
-                    backgroundImage:
-                    const AssetImage('assets/images/bg_circle.png'),
-                  ))
+                      radius: 100.r,
+                      backgroundColor: kHomeScreenColor,
+                      child: CircleAvatar(
+                        radius: 95.r,
+                        backgroundImage:
+                            const AssetImage('assets/images/bg_circle.png'),
+                      ))
                   : Container(
-                decoration: BoxDecoration(
-                  border: Border.all(width: 5, color: kHomeScreenColor),
-                ),
-                child: Image.file(
-                  image!,
-                  width: 180.w,
-                  height: 180.h,
-                  fit: BoxFit.fill,
-                ),
-              ),
+                      decoration: BoxDecoration(
+                        border: Border.all(width: 5, color: kHomeScreenColor),
+                      ),
+                      child: Image.file(
+                        image!,
+                        width: 180.w,
+                        height: 180.h,
+                        fit: BoxFit.fill,
+                      ),
+                    ),
               const Spacer(flex: 2),
               Container(
                 decoration: BoxDecoration(
@@ -129,9 +144,9 @@ class _XRayScreenTState extends State<XRayScreenT> {
                       showModalBottomSheet(
                           context: context,
                           builder: (context) => CustomBottomSheet(
-                            context,
-                            galleryFunction: _imgFromGallery,
-                          ));
+                                context,
+                                galleryFunction: _imgFromGallery,
+                              ));
                     },
                     child: Text(
                       'Choose X-ray Image',
@@ -160,11 +175,12 @@ class _XRayScreenTState extends State<XRayScreenT> {
                       } else {
                         _showProgressIndicator(context);
                         Future.delayed(const Duration(seconds: 6), () {
-                          Navigator.pop(context); // close the progress indicator
+                          Navigator.pop(
+                              context); // close the progress indicator
                           Navigator.push(context,
                               MaterialPageRoute(builder: (context) {
-                                return XRayResultScreen(image!, result);
-                              }));
+                            return XRayResultScreen(image!, result);
+                          }));
                         });
                       }
                     },
