@@ -1,11 +1,13 @@
 import 'dart:io';
 
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:save_knee_23/widgets/bottom_sheet.dart';
 
 import '../constants.dart';
+import '../core/utils/local_tflite_service.dart';
 import '../services/xray_classifier.dart';
 import '../widgets/custom_appbar.dart';
 import 'xray_result_screen.dart';
@@ -21,11 +23,23 @@ class _XRayScreenState extends State<XRayScreen> {
   File? _image;
   ImagePicker imagePicker = ImagePicker();
   late String result;
+  late KneeOAClassifier classifier;
+  String predictionResult = "Loading...";
+
+  @override
+  initState() {
+    super.initState();
+    classifier = KneeOAClassifier();
+    WidgetsBinding.instance.addPostFrameCallback((_) => classifier.loadModel());
+  }
 
   _imgFromCamera() async {
     XFile? pickedFile = await imagePicker.pickImage(source: ImageSource.camera);
     _image = File(pickedFile!.path);
-    result = (await doImageClassification(_image));
+    if (_image == null) {
+      return;
+    }
+    result = (await classifier.predict(_image!.readAsBytesSync()));
     setState(() {
       _image;
     });
@@ -35,16 +49,13 @@ class _XRayScreenState extends State<XRayScreen> {
     XFile? pickedFile =
         await imagePicker.pickImage(source: ImageSource.gallery);
     _image = File(pickedFile!.path);
-    result = (await doImageClassification(_image));
+    if (_image == null) {
+      return;
+    }
+    result = (await classifier.predict(_image!.readAsBytesSync()));
     setState(() {
       _image;
     });
-  }
-
-  @override
-  void initState() {
-    super.initState();
-    loadModelFiles();
   }
 
   @override
@@ -153,6 +164,20 @@ class _XRayScreenState extends State<XRayScreen> {
       ),
     );
   }
-  
-  void loadModelFiles() {}
+
+  Future<void> _runModel() async {
+    classifier = KneeOAClassifier();
+    await classifier.loadModel();
+
+    // Load image from assets
+    final byteData = await rootBundle.load('assets/sample_knee.jpg');
+    final imageBytes = byteData.buffer.asUint8List();
+
+    // Run prediction
+    final result = await classifier.predict(imageBytes);
+
+    setState(() {
+      predictionResult = "Predicted Grade: $result";
+    });
+  }
 }
