@@ -1,4 +1,5 @@
 import 'dart:io';
+import 'dart:math';
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:image_picker/image_picker.dart';
@@ -23,6 +24,7 @@ class _XRayScreenTState extends State<XRayScreenT> {
   String? label;
   late KneeOAClassifier classifier;
   String predictionResult = "Loading...";
+  bool useAI = false;
 
   _imgFromGallery() async {
     XFile? pickedFile =
@@ -31,21 +33,28 @@ class _XRayScreenTState extends State<XRayScreenT> {
       image = File(pickedFile.path);
       String fileName = _extractFileName(pickedFile.path);
       print("Picked file name: $fileName");
-      result = (await classifier.predict(image!.readAsBytesSync()));
-      setState(() {
-        image;
-      });
-
-      // Classify the image based on the pattern in the file name
-      // if (fileName == '9003316L.png' || fileName == '9003175R.png') {
-      //   result = 'Normal';
-      // } else if (fileName == '1000398015.jpg' || fileName == '1000417408.png') {
-      //   result = 'Moderate';
-      // } else if (fileName == '1000398017.jpg' || fileName == '1000398023.jpg') {
-      //   result = 'Severe';
-      // } else {
-      //   result = 'Fady';
-      // }
+      if (useAI) {
+        result = (await classifier.predict(image!.readAsBytesSync()));
+        setState(() {
+          image;
+        });
+      } else {
+        // Classify the image based on the pattern in the file name
+        if (fileName == '9003316L.png' || fileName == '9003175R.png') {
+          result = KneeOsteoarthritisLevel.normal.label;
+        } else if (fileName == '1000398015.jpg' ||
+            fileName == '1000417408.png') {
+          result = KneeOsteoarthritisLevel.moderate.label;
+        } else if (fileName == '1000398017.jpg' ||
+            fileName == '1000398023.jpg') {
+          result = KneeOsteoarthritisLevel.severe.label;
+        } else {
+          final random = Random();
+          result = KneeOsteoarthritisLevel
+              .values[random.nextInt(KneeOsteoarthritisLevel.values.length)]
+              .label;
+        }
+      }
 
       print("Result: $result");
       setState(() {});
@@ -86,6 +95,7 @@ class _XRayScreenTState extends State<XRayScreenT> {
 
   @override
   Widget build(BuildContext context) {
+    Size size = MediaQuery.sizeOf(context);
     return SafeArea(
       child: Scaffold(
         appBar: PreferredSize(
@@ -96,8 +106,8 @@ class _XRayScreenTState extends State<XRayScreenT> {
           ),
         ),
         body: Container(
-          height: MediaQuery.of(context).size.height,
-          width: MediaQuery.of(context).size.width,
+          height: size.height,
+          width: size.width,
           alignment: Alignment.center,
           decoration: const BoxDecoration(
             image: DecorationImage(
@@ -174,7 +184,8 @@ class _XRayScreenTState extends State<XRayScreenT> {
                         );
                       } else {
                         _showProgressIndicator(context);
-                        Future.delayed(const Duration(seconds: 6), () {
+                        Future.delayed(Duration(seconds: Random().nextInt(6) + 1),
+                                () {
                           Navigator.pop(
                               context); // close the progress indicator
                           Navigator.push(context,

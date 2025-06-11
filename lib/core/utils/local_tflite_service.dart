@@ -8,7 +8,7 @@ class KneeOAClassifier {
 
   Future<void> loadModel() async {
     _interpreter =
-        await Interpreter.fromAsset("assets/models/finalmodel2024.tflite");
+        await Interpreter.fromAsset("assets/models/my_model.tflite");
   }
 
   Future<String> predict(Uint8List imageBytes) async {
@@ -44,23 +44,17 @@ class KneeOAClassifier {
 
     debugPrint("Predicted index: $predictedIndex, confidence: $maxScore");
 
-    final labels = [
-      "Normal (KL 0)",
-      "Doubtful (KL 1)",
-      "Mild (KL 2)",
-      "Moderate (KL 3)",
-      "Severe (KL 4)",
-    ];
+
 
     // Add bounds checking
-    if (predictedIndex >= labels.length) {
+    if (predictedIndex >= KneeOsteoarthritisLevel.values.length) {
       throw Exception(
           'Predicted index $predictedIndex is out of bounds for labels');
     }
 
     debugModelInfo();
 
-    return "${labels[predictedIndex]} (confidence: ${(maxScore * 100).toStringAsFixed(1)}%)";
+    return "${KneeOsteoarthritisLevel.values[predictedIndex]} (confidence: ${(maxScore * 100).toStringAsFixed(1)}%)";
   }
 
   /// Convert image to [1, height, width, 3] float32 normalized format
@@ -113,4 +107,15 @@ class KneeOAClassifier {
     debugPrint("  Shape: ${outputTensor.shape}");
     debugPrint("  Type: ${outputTensor.type}");
   }
+}
+
+enum KneeOsteoarthritisLevel {
+  normal("Normal (KL 0)"),
+  doubtful("Doubtful (KL 1)"),
+  mild("Mild (KL 2)"),
+  moderate("Moderate (KL 3)"),
+  severe("Severe (KL 4)");
+
+  final String label;
+  const KneeOsteoarthritisLevel(this.label);
 }
